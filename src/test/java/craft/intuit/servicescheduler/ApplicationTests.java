@@ -66,6 +66,45 @@ class ApplicationTests {
 	}
 
 	@Test
+	void testVipToRegularCustomerRatio() {
+		// Assuming every fifth customer is a VIP as per your service logic
+		for (int i = 0; i < 10; i++) {
+			Customer customer = Customer.builder()
+					.name("Customer" + i)
+					.phoneNumber("123000" + i)
+					.customerType(i % 5 == 0 ? CustomerType.VIP : CustomerType.REGULAR)
+					.build();
+			serviceScheduler.checkIn(customer);
+		}
+
+		// Validate the processing order adheres to the 2:1 VIP to Regular ratio
+		Customer first = serviceScheduler.getNextCustomer();
+		assertSame(first.getCustomerType(), CustomerType.VIP);
+		Customer second = serviceScheduler.getNextCustomer();
+		assertSame(second.getCustomerType(), CustomerType.VIP);
+		Customer third = serviceScheduler.getNextCustomer();
+		assertSame(third.getCustomerType(), CustomerType.REGULAR);
+		// Continue for more customers as needed
+	}
+
+	@Test
+	void testLateArrivalOfVipCustomers() {
+		Customer regularCustomer1 = Customer.builder()
+				.name("Charlie")
+				.phoneNumber("3456789012")
+				.customerType(CustomerType.REGULAR).build();
+		Customer vipCustomer = Customer.builder()
+				.name("Alice")
+				.phoneNumber("1234567890")
+				.customerType(CustomerType.VIP).build();
+
+		serviceScheduler.checkIn(regularCustomer1);
+		serviceScheduler.checkIn(vipCustomer);
+
+		assertEquals(vipCustomer, serviceScheduler.getNextCustomer(), "VIP customer should be served first even if checked in after a regular customer");
+	}
+
+	@Test
 	void testAlternatingVIPAndRegularCustomers() {
 		Customer vipCustomer = Customer.builder()
 				.name("Alice")
@@ -99,15 +138,23 @@ class ApplicationTests {
 	}
 
 	@Test
+	void whenCustomerIsNull_thenThrowException() {
+		Exception exception = assertThrows(IllegalArgumentException.class, () -> serviceScheduler.checkIn(null));
+
+		String expectedMessage = "Customer cannot be null";
+		String actualMessage = exception.getMessage();
+
+		assertTrue(actualMessage.contains(expectedMessage));
+	}
+
+	@Test
 	void whenInvalidCustomerType_thenThrowException() {
 		Customer invalidCustomer = Customer.builder()
 				.name("John Doe")
 				.phoneNumber("5551234")
 				.customerType(null).build();
 
-		Exception exception = assertThrows(InvalidCustomerTypeException.class, () -> {
-			serviceScheduler.checkIn(invalidCustomer);
-		});
+		Exception exception = assertThrows(InvalidCustomerTypeException.class, () -> serviceScheduler.checkIn(invalidCustomer));
 
 		String expectedMessage = "Customer type is invalid or null.";
 		String actualMessage = exception.getMessage();
@@ -119,13 +166,12 @@ class ApplicationTests {
 	void whenCustomerNotFound_thenThrowException() {
 		String nonExistentPhoneNumber = "9999999999";
 
-		Exception exception = assertThrows(CustomerNotFoundException.class, () -> {
-			serviceScheduler.findCustomer(nonExistentPhoneNumber);
-		});
+		Exception exception = assertThrows(CustomerNotFoundException.class, () -> serviceScheduler.findCustomer(nonExistentPhoneNumber));
 
 		String expectedMessage = "Customer with phone number " + nonExistentPhoneNumber + " not found.";
 		String actualMessage = exception.getMessage();
 
 		assertTrue(actualMessage.contains(expectedMessage));
 	}
+
 }

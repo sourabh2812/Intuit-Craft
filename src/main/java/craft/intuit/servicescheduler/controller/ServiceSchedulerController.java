@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -25,10 +26,15 @@ public class ServiceSchedulerController {
                     @ApiResponse(description = "Customer checked in successfully", content = @Content),
                     @ApiResponse(responseCode = "400", description = "Invalid customer details", content = @Content)
             })
-    public String checkInCustomer(@RequestBody Customer customer) {
-        log.info("Checking in customer: {}", customer.getName());
-        serviceScheduler.checkIn(customer);
-        return "Customer checked in with service number: " + customer.getServiceNumber();
+    public ResponseEntity<String> checkInCustomer(@RequestBody Customer customer) {
+        try {
+            log.info("Checking in customer: {}", customer.getName());
+            serviceScheduler.checkIn(customer);
+            return ResponseEntity.ok("Customer checked in with service number: " + customer.getServiceNumber());
+        } catch (Exception e) {
+            log.error("Error during customer check-in: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error checking in customer: " + e.getMessage());
+        }
     }
 
     @GetMapping("/nextCustomer")
@@ -38,14 +44,15 @@ public class ServiceSchedulerController {
                     @ApiResponse(description = "Next customer to be served", content = @Content),
                     @ApiResponse(responseCode = "404", description = "No customers in the queue", content = @Content)
             })
-    public Customer getNextCustomer() {
+    public ResponseEntity<Customer> getNextCustomer() {
         Customer customer = serviceScheduler.getNextCustomer();
         if (customer != null) {
             log.info("Next customer to be served: {}", customer.getName());
+            return ResponseEntity.ok(customer);
         } else {
             log.info("No more customers in the queue");
+            return ResponseEntity.notFound().build();
         }
-        return customer;
     }
 
     @GetMapping("/findCustomer/{phoneNumber}")
@@ -55,8 +62,14 @@ public class ServiceSchedulerController {
                     @ApiResponse(description = "Customer found", content = @Content),
                     @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
             })
-    public Customer findCustomer(@PathVariable String phoneNumber) {
-        log.info("Finding customer with phone number: {}", phoneNumber);
-        return serviceScheduler.findCustomer(phoneNumber);
+    public ResponseEntity<Customer> findCustomer(@PathVariable String phoneNumber) {
+        try {
+            log.info("Finding customer with phone number: {}", phoneNumber);
+            Customer customer = serviceScheduler.findCustomer(phoneNumber);
+            return ResponseEntity.ok(customer);
+        } catch (Exception e) {
+            log.error("Error finding customer: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 }

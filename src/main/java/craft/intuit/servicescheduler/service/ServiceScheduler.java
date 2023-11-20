@@ -7,65 +7,76 @@ import craft.intuit.servicescheduler.model.CustomerType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Queue;
 
 @Service
 @Slf4j
 public class ServiceScheduler {
-    private final Queue<Customer> regularQueue = new LinkedList<>();
-    private final Queue<Customer> vipQueue = new LinkedList<>();
+    private final Queue<Customer> regularQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<Customer> vipQueue = new ConcurrentLinkedQueue<>();
     private int serviceCounter = 0;
     private int vipToRegularRatio = 0;
 
-    public void checkIn(Customer customer) {
+    public synchronized void checkIn(Customer customer) {
+        if (customer == null) {
+            log.error("Attempted to check in a null customer");
+            throw new IllegalArgumentException("Customer cannot be null");
+        }
+
         if (customer.getCustomerType() == null) {
+            log.error("Invalid customer type for customer: {}", customer);
             throw new InvalidCustomerTypeException("Customer type is invalid or null.");
         }
 
         customer.setServiceNumber(++serviceCounter);
         if (customer.getCustomerType() == CustomerType.VIP) {
             vipQueue.add(customer);
-            log.debug("VIP customer added to the queue: {}", customer.getName());
-        } else if (customer.getCustomerType() == CustomerType.REGULAR) {
-            regularQueue.add(customer);
-            log.debug("Regular customer added to the queue: {}", customer.getName());
+            log.debug("VIP customer added to the queue: {}", customer);
         } else {
-            log.error("Customer type is not recognized for customer: {}", customer.getName());
-            throw new InvalidCustomerTypeException("Customer type is not recognized.");
+            regularQueue.add(customer);
+            log.debug("Regular customer added to the queue: {}", customer);
         }
     }
 
-    public Customer getNextCustomer() {
-        if (!vipQueue.isEmpty()) {
-            if (vipToRegularRatio < 2) {
-                vipToRegularRatio++;
-                return vipQueue.poll();
-            }
+    public synchronized Customer getNextCustomer() {
+        Customer customer = null;
+
+        if (!vipQueue.isEmpty() && (vipToRegularRatio < 2 || regularQueue.isEmpty())) {
+            customer = vipQueue.poll();
+            vipToRegularRatio++;
+        } else if (!regularQueue.isEmpty()) {
+            customer = regularQueue.poll();
+            vipToRegularRatio = 0;
         }
 
-        if (!regularQueue.isEmpty()) {
-            vipToRegularRatio = 0; // Reset ratio after serving a regular customer
-            return regularQueue.poll();
-        }
-
-        return null; // Return null if no customers are waiting
+        log.info(customer != null ? "Serving customer: " + customer : "No customers to serve");
+        return customer;
     }
 
     public Customer findCustomer(String phoneNumber) {
-        // In a real scenario, this might involve searching in a database
-        for (Customer customer : regularQueue) {
-            if (customer.getPhoneNumber().equals(phoneNumber)) {
-                return customer;
-            }
-        }
-        for (Customer customer : vipQueue) {
-            if (customer.getPhoneNumber().equals(phoneNumber)) {
-                return customer;
-            }
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            log.error("Invalid phone number provided for customer search");
+            throw new IllegalArgumentException("Phone number cannot be null or blank");
         }
 
-        log.error("Customer not found with phone number: {}", phoneNumber);
-        throw new CustomerNotFoundException("Customer with phone number " + phoneNumber + " not found.");
+        Customer customer = searchQueueForCustomer(regularQueue, phoneNumber);
+        if (customer == null) {
+            customer = searchQueueForCustomer(vipQueue, phoneNumber);
+        }
+
+        if (customer == null) {
+            log.error("Customer not found with phone number: {}", phoneNumber);
+            throw new CustomerNotFoundException("Customer with phone number " + phoneNumber + " not found.");
+        }
+
+        return customer;
+    }
+
+    private Customer searchQueueForCustomer(Queue<Customer> queue, String phoneNumber) {
+        return queue.stream()
+                .filter(customer -> phoneNumber.equals(customer.getPhoneNumber()))
+                .findFirst()
+                .orElse(null);
     }
 }
