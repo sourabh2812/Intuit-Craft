@@ -1,5 +1,6 @@
 package craft.intuit.servicescheduler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import craft.intuit.servicescheduler.exceptions.CustomerNotFoundException;
 import craft.intuit.servicescheduler.exceptions.InvalidCustomerTypeException;
 import craft.intuit.servicescheduler.model.Customer;
@@ -9,14 +10,23 @@ import craft.intuit.servicescheduler.service.impl.ServiceSchedulerImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@AutoConfigureMockMvc
 @SpringBootTest
 class ApplicationTests {
 	@Autowired
 	private ServiceScheduler serviceScheduler;
+
+	@Autowired
+	private MockMvc mockMvc;
 
 	@BeforeEach
 	void setUp() {
@@ -151,18 +161,17 @@ class ApplicationTests {
 	}
 
 	@Test
-	void whenInvalidCustomerType_thenThrowException() {
+	void whenInvalidCustomerType_thenBadRequest() throws Exception {
 		Customer invalidCustomer = Customer.builder()
 				.name("John Doe")
 				.phoneNumber("5551234")
-				.customerType(null).build();
+				.customerType(null) // Invalid as customerType is null
+				.build();
 
-		Exception exception = assertThrows(InvalidCustomerTypeException.class, () -> serviceScheduler.checkIn(invalidCustomer));
-
-		String expectedMessage = "Customer type is invalid or null.";
-		String actualMessage = exception.getMessage();
-
-		assertTrue(actualMessage.contains(expectedMessage));
+		mockMvc.perform(post("/scheduler/checkIn")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(new ObjectMapper().writeValueAsString(invalidCustomer)))
+				.andExpect(status().isBadRequest());
 	}
 
 	@Test

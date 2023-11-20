@@ -5,6 +5,7 @@ import craft.intuit.servicescheduler.service.ServiceScheduler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,15 +27,10 @@ public class ServiceSchedulerController {
                     @ApiResponse(description = "Customer checked in successfully", content = @Content),
                     @ApiResponse(responseCode = "400", description = "Invalid customer details", content = @Content)
             })
-    public ResponseEntity<String> checkInCustomer(@RequestBody Customer customer) {
-        try {
-            log.info("Checking in customer: {}", customer.getName());
-            serviceScheduler.checkIn(customer);
-            return ResponseEntity.ok("Customer checked in with service number: " + customer.getServiceNumber());
-        } catch (Exception e) {
-            log.error("Error during customer check-in: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Error checking in customer: " + e.getMessage());
-        }
+    public ResponseEntity<String> checkInCustomer(@Valid @RequestBody Customer customer) {
+        log.info("Checking in customer: {}", customer.getName());
+        serviceScheduler.checkIn(customer);
+        return ResponseEntity.ok("Customer checked in with service number: " + customer.getServiceNumber());
     }
 
     @GetMapping("/nextCustomer")
@@ -63,13 +59,8 @@ public class ServiceSchedulerController {
                     @ApiResponse(responseCode = "404", description = "Customer not found", content = @Content)
             })
     public ResponseEntity<Customer> findCustomer(@PathVariable String phoneNumber) {
-        try {
-            log.info("Finding customer with phone number: {}", phoneNumber);
-            Customer customer = serviceScheduler.findCustomer(phoneNumber);
-            return ResponseEntity.ok(customer);
-        } catch (Exception e) {
-            log.error("Error finding customer: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        log.info("Finding customer with phone number: {}", phoneNumber);
+        Customer customer = serviceScheduler.findCustomer(phoneNumber);
+        return ResponseEntity.ok(customer);
     }
 }

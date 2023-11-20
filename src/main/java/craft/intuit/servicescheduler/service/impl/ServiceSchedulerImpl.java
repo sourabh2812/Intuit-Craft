@@ -1,7 +1,6 @@
 package craft.intuit.servicescheduler.service.impl;
 
 import craft.intuit.servicescheduler.exceptions.CustomerNotFoundException;
-import craft.intuit.servicescheduler.exceptions.InvalidCustomerTypeException;
 import craft.intuit.servicescheduler.model.Customer;
 import craft.intuit.servicescheduler.model.CustomerType;
 import craft.intuit.servicescheduler.service.ServiceScheduler;
@@ -25,18 +24,11 @@ public class ServiceSchedulerImpl implements ServiceScheduler {
             throw new IllegalArgumentException("Customer cannot be null");
         }
 
-        if (customer.getCustomerType() == null) {
-            log.error("Invalid customer type for customer: {}", customer);
-            throw new InvalidCustomerTypeException("Customer type is invalid or null.");
-        }
-
         customer.setServiceNumber(++serviceCounter);
         if (customer.getCustomerType() == CustomerType.VIP) {
             vipQueue.add(customer);
-            log.debug("VIP customer added to the queue: {}", customer);
         } else {
             regularQueue.add(customer);
-            log.debug("Regular customer added to the queue: {}", customer);
         }
     }
 
