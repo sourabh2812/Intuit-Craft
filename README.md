@@ -12,6 +12,8 @@ The application consists of several components working together to implement the
 - **Exception Handling**: Custom exceptions and global exception handling.
 - **Swagger Documentation**: Integrated API documentation using SpringDoc OpenAPI.
 
+![System Design](scheduler.png)
+
 ### Customer Flow
 1. A customer checks in and is given a ticket with a sequential service number.
 2. The service number is called by the staff in the order determined by the scheduler.

@@ -53,7 +53,6 @@ public class ServiceScheduler {
     }
 
     public Customer findCustomer(String phoneNumber) {
-        // Placeholder logic for finding a customer
         // In a real scenario, this might involve searching in a database
         for (Customer customer : regularQueue) {
             if (customer.getPhoneNumber().equals(phoneNumber)) {
