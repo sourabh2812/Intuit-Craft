@@ -5,19 +5,22 @@ import craft.intuit.servicescheduler.exceptions.InvalidCustomerTypeException;
 import craft.intuit.servicescheduler.model.Customer;
 import craft.intuit.servicescheduler.model.CustomerType;
 import craft.intuit.servicescheduler.service.ServiceScheduler;
+import craft.intuit.servicescheduler.service.impl.ServiceSchedulerImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class ApplicationTests {
+	@Autowired
 	private ServiceScheduler serviceScheduler;
 
 	@BeforeEach
 	void setUp() {
-		serviceScheduler = new ServiceScheduler();
+		serviceScheduler = new ServiceSchedulerImpl();
 	}
 
 	@Test
