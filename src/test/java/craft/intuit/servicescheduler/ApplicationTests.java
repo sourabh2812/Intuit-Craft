@@ -151,13 +151,11 @@ class ApplicationTests {
 	}
 
 	@Test
-	void whenCustomerIsNull_thenThrowException() {
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> serviceScheduler.checkIn(null));
-
-		String expectedMessage = "Customer cannot be null";
-		String actualMessage = exception.getMessage();
-
-		assertTrue(actualMessage.contains(expectedMessage));
+	void whenCustomerIsNull_thenBadRequest() throws Exception {
+		mockMvc.perform(post("/scheduler/checkIn")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(new ObjectMapper().writeValueAsString(null)))
+				.andExpect(status().isBadRequest());
 	}
 
 	@Test

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class ServiceSchedulerController {
                     @ApiResponse(description = "Customer checked in successfully", content = @Content),
                     @ApiResponse(responseCode = "400", description = "Invalid customer details", content = @Content)
             })
-    public ResponseEntity<String> checkInCustomer(@Valid @RequestBody Customer customer) {
+    public ResponseEntity<String> checkInCustomer(@Valid @NonNull Customer customer) {
         log.info("Checking in customer: {}", customer.getName());
         serviceScheduler.checkIn(customer);
         return ResponseEntity.ok("Customer checked in with service number: " + customer.getServiceNumber());

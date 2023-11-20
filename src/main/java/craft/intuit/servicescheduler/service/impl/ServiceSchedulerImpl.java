@@ -10,20 +10,16 @@ import org.springframework.stereotype.Service;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@Service
 @Slf4j
+@Service
 public class ServiceSchedulerImpl implements ServiceScheduler {
     private final Queue<Customer> regularQueue = new ConcurrentLinkedQueue<>();
     private final Queue<Customer> vipQueue = new ConcurrentLinkedQueue<>();
     private int serviceCounter = 0;
     private int vipToRegularRatio = 0;
 
+    @Override
     public synchronized void checkIn(Customer customer) {
-        if (customer == null) {
-            log.error("Attempted to check in a null customer");
-            throw new IllegalArgumentException("Customer cannot be null");
-        }
-
         customer.setServiceNumber(++serviceCounter);
         if (customer.getCustomerType() == CustomerType.VIP) {
             vipQueue.add(customer);
@@ -32,6 +28,7 @@ public class ServiceSchedulerImpl implements ServiceScheduler {
         }
     }
 
+    @Override
     public synchronized Customer getNextCustomer() {
         Customer customer = null;
 
@@ -47,6 +44,7 @@ public class ServiceSchedulerImpl implements ServiceScheduler {
         return customer;
     }
 
+    @Override
     public Customer findCustomer(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.isBlank()) {
             log.error("Invalid phone number provided for customer search");
