@@ -2,7 +2,6 @@ package craft.intuit.servicescheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import craft.intuit.servicescheduler.exceptions.CustomerNotFoundException;
-import craft.intuit.servicescheduler.exceptions.InvalidCustomerTypeException;
 import craft.intuit.servicescheduler.model.Customer;
 import craft.intuit.servicescheduler.model.CustomerType;
 import craft.intuit.servicescheduler.service.ServiceScheduler;

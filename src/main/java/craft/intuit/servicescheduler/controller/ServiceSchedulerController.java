@@ -28,7 +28,7 @@ public class ServiceSchedulerController {
                     @ApiResponse(description = "Customer checked in successfully", content = @Content),
                     @ApiResponse(responseCode = "400", description = "Invalid customer details", content = @Content)
             })
-    public ResponseEntity<String> checkInCustomer(@Valid @NonNull Customer customer) {
+    public ResponseEntity<String> checkInCustomer(@Valid @NonNull @RequestBody Customer customer) {
         log.info("Checking in customer: {}", customer.getName());
         serviceScheduler.checkIn(customer);
         return ResponseEntity.ok("Customer checked in with service number: " + customer.getServiceNumber());
